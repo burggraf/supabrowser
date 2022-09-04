@@ -48,7 +48,11 @@
                     vga_bios: {
                         url: "./system/vgabios.bin",
                     },
-                } : { initial_state: { url: "./state/state.bin.zst" } })
+                } : {
+                    initial_state: {
+                        url: "./state/state.bin.zst"
+                    }
+                })
             };
 
             var emulator = new V86Starter(options);
@@ -76,23 +80,22 @@
 
             var state;
 
-            document.getElementById("save_restore").onclick = async function () {
-                var button = this;
+            // document.getElementById("save_restore").onclick = async function () {
+            //     var button = this;
 
-                if (state) {
-                    button.value = "Save state";
-                    await emulator.restore_state(state);
-                    state = undefined;
-                }
-                else {
-                    const new_state = await emulator.save_state();
-                    console.log("Saved state of " + new_state.byteLength + " bytes");
-                    button.value = "Restore state";
-                    state = new_state;
-                }
+            //     if (state) {
+            //         button.value = "Save state";
+            //         await emulator.restore_state(state);
+            //         state = undefined;
+            //     } else {
+            //         const new_state = await emulator.save_state();
+            //         console.log("Saved state of " + new_state.byteLength + " bytes");
+            //         button.value = "Restore state";
+            //         state = new_state;
+            //     }
 
-                button.blur();
-            };
+            //     button.blur();
+            // };
 
             document.getElementById("save_file").onclick = async function () {
                 const new_state = await emulator.save_state();
@@ -137,8 +140,48 @@
                     reader.readAsText(files[i]);
                 }
             }
-        };
 
+            document.getElementById("read_file").onclick = async function () {
+                // downloadBlob = function (data, fileName, mimeType) {
+                //     var blob, url;
+                //     blob = new Blob([data], {
+                //         type: mimeType
+                //     });
+                //     url = window.URL.createObjectURL(blob);
+                //     downloadURL(url, fileName);
+                //     setTimeout(function () {
+                //         return window.URL.revokeObjectURL(url);
+                //     }, 1000);
+                // };
+                // downloadURL = function (data, fileName) {
+                //     var a;
+                //     a = document.createElement('a');
+                //     a.href = data;
+                //     a.download = fileName;
+                //     document.body.appendChild(a);
+                //     a.style = 'display: none';
+                //     a.click();
+                //     a.remove();
+                // };
+                const path = document.getElementById("read_file_name").value;
+                const contents = await emulator.read_file(path);
+                const filename = ('/' + path).split('/').pop();
+
+                // download contents to file
+                var a = document.createElement("a");
+                a.download = filename;
+                a.href = window.URL.createObjectURL(new Blob([contents]));
+                a.dataset.downloadurl = "application/octet-stream:" + a.download + ":" + a.href;
+                a.click();
+                a.remove();
+                
+                
+
+
+                // downloadBlob(contents, filename, 'application/octet-stream');
+            }
+
+        };
     </script>
 </head>
 
@@ -148,10 +191,13 @@
         <canvas></canvas>
     </div>
     <div>
-        <input id="save_restore" type="button" value="Save state">
+        <input id="read_file" type="button" value="download file">
+        <input type="text" id="read_file_name" value="" placeholder="enter path to file">
+        &nbsp;&nbsp;
+        <!-- <input id="save_restore" type="button" value="Save state"> -->
         <input id="save_file" type="button" value="Save state to file">
         Restore from file: <input id="restore_file" type="file">
-        Upload files to the emulator: <input id="upload_files" type="file" multiple>
+        <br/>Upload files to the emulator: <input id="upload_files" type="file" multiple>
     </div>
     <hr />
     <div id="terminal" style="filter: blur(3px);"></div>
