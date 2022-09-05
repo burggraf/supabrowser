@@ -34,7 +34,7 @@
             let memorysizeElement = document.getElementById("memorysize");
             memorysizeElement.value = config.memory_size;
             document.getElementById("fontsize").value = config.font_size;
-            
+
             const baseOptions = {
                 wasm_path: "./js/no-jit/v86.wasm",
                 memory_size: config.memory_size * 1024 * 1024,
@@ -57,7 +57,7 @@
 
             if (boot) {
                 document.getElementById("screen_container").style = 'display:block';
-                document.getElementById("terminal").style = '';
+                // document.getElementById("terminal").style = '';
             }
 
             const options = {
@@ -78,7 +78,7 @@
                     },
                 } : {
                     initial_state: {
-                        url: "./state/state.bin.zst"
+                        url: "./state/state-" + config.memory_size + ".bin.zst"
                     }
                 })
             };
@@ -87,6 +87,7 @@
 
             if (!boot) {
                 emulator.add_listener("emulator-ready", function () {
+                    console.log("emulator ready!");
                     updateFontSize();
 
                     setTimeout(() => {
@@ -94,15 +95,42 @@
                         emulator.serial0_send('psql -U postgres\n');
                         emulator.serial0_send('\\! echo "boot_completed"; reset\n');
                     }, 0);
+                    setTimeout(() => {
+                        document.getElementById("terminal").style = 'filter: none;';
+                    }, 2000);
                 });
+            } else {
+                // let the user watch the boot process
+                document.getElementById("terminal").style = 'filter: none;';
 
                 function handleBoot(line) {
-                    if (line === "postgres=# boot_completed\r\n") {
+                    console.log('handleBoot =>', line);
+                    if (line.startsWith("server started")) {
                         emulator.remove_listener(handleBoot);
+                        // setTimeout(() => {
+                        // emulator.serial0_send('\\!/etc/init.d/S40network restart\n');
+                        // emulator.serial0_send('psql -U postgres\n');
+                        // emulator.serial0_send('\\! echo "boot_completed"; reset\n');
+                        // }, 0);
                         setTimeout(() => {
-                            document.getElementById("terminal").style = 'filter: none;';
-                            emulator.serial_adapter.term.focus();
-                        }, 300);
+                            emulator.serial0_send('\\!/etc/init.d/S40network restart\n');
+                            emulator.serial0_send('psql -U postgres\n');
+                            emulator.serial0_send('\\! echo "boot_completed"; reset\n');
+                            setTimeout(() => {
+                                document.getElementById("terminal").style = 'filter: none;';
+                                document.getElementById("screen_container").style =
+                                'display: none;';
+                                emulator.serial_adapter.term.focus();
+                            }, 2000);
+
+                        }, 1000);
+
+
+                        // setTimeout(() => {
+                        //     document.getElementById("terminal").style = 'filter: none;';
+                        //     document.getElementById("screen_container").style = 'display: none;';
+                        //     emulator.serial_adapter.term.focus();
+                        // }, 300);
                     }
                 }
                 emulator.add_listener("serial0-output-line", handleBoot);
@@ -119,6 +147,7 @@
                 console.log('save result', result);
             }
             emulator.restore = async function () {
+                console.log('restoring from indexedDB', 'state-' + config.memory_size);
                 storage.get('state-' + config.memory_size).then(function (state) {
                     if (state) {
                         const byteLength = state.byteLength;
@@ -241,6 +270,27 @@
                 console.log('terminal not initialized, cannot update find size yet');
             }
         }
+
+        function updateMemorySize() {
+            const fullboot = document.getElementById("fullboot").checked;
+            const newMemorySize = document.getElementById("memorysize").value;
+            try {
+                config.memory_size = parseInt(newMemorySize, 10) || 96;
+                if (!config.memory_size || config.memory_size < 96) {
+                    config.memory_size = 96;
+                    document.getElementById("memorysize").value = config.memory_size;
+                }
+                localStorage.setItem('config', JSON.stringify(config));
+                // get current url of window
+                let url = window.location.origin;
+                if (fullboot) {
+                    url += '?boot=true';
+                }
+                window.location = url;
+            } catch (e) {
+                console.log('updateMemorySize error', e);
+            }
+        }
     </script>
 </head>
 
@@ -249,64 +299,53 @@
     <div id="screen_container" style="display:none">
         <div></div>
         <canvas></canvas>
+        <hr />
     </div>
-    <div>
+    <div id="terminal" style="filter: blur(3px);"></div>
+    <hr />
+    <div style="clear: both;">
+        <!-- <input id="save_restore" type="button" value="Save state"> -->
+        <input id="save_file" type="button" value="Save state to file">&nbsp;&nbsp;
+        <button style="display:inline;width:160px; height:20px;"
+            onclick="document.getElementById('restore_file').click()">
+            Restore state from file
+        </button>
+        <input type='file' id="restore_file" style="display:none">
 
-        <div style="clear: both;">
-            <!-- <input id="save_restore" type="button" value="Save state"> -->
-            <input id="save_file" type="button" value="Save state to file">&nbsp;&nbsp;
-            <button style="display:inline;width:160px; height:20px;"
-                onclick="document.getElementById('restore_file').click()">
-                Restore state from file
-            </button>
-            <input type='file' id="restore_file" style="display:none">
-
-            <br />
-            <button onclick="emulator.save()">Save to IndexedDB</button>&nbsp;&nbsp;
-            <button onclick="emulator.restore()">Restore from IndexedDB</button>&nbsp;&nbsp;
-            <button onclick="emulator.clearState()">Clear IndexedDB</button>
-            <br />
-            <input type="text" id="fontsize" value="15" min="4" max="40" style="width: 25px">&nbsp;&nbsp;<button
-                onclick="updateFontSize()">Update font size</button>
-            <br />
-            memory (mb): <select name="memorysize" id="memorysize">
-                <option value="128">128</option>
-                <option value="196">196</option>
-                <option value="256">256</option>
-                <option value="384">384</option>
-                <option value="512">512</option>
-                <option value="1024">1024</option>
-                <option value="2048">2048</option>
-            </select>
-            <!-- <input type="text" id="memorysize" value="96" min="96" max="8192" style="width: 35px">-->&nbsp;&nbsp;<button
-                onclick="updateMemorySize()">Reset</button>
-            &nbsp;&nbsp;<input type="checkbox" id="fullboot" name="fullboot" value="true"> Full Boot
-            <br />
-            <button style="display:inline;width:160px; height:20px;"
-                onclick="document.getElementById('upload_files').click()">
-                Send files to emulator
-            </button>
-            <input type='file' id="upload_files" style="display:none" multiple>
-
-            &nbsp;&nbsp;
-
-            <button style="display:inline;width:110px; height:20px;" id="read_file">
-                Download file
-            </button>
-            <input type="text" id="read_file_name" value="" placeholder="enter path to file">
-
-            <!-- <textarea id="textarea" cols="55" rows="10" style="width: 100%"></textarea><br>
-            <button onclick="sendText()">Send Text</button> -->
-        </div>
-
-        <hr />
-        <hr />
+        <br />
+        <button onclick="emulator.save()">Save to IndexedDB</button>&nbsp;&nbsp;
+        <button onclick="emulator.restore()">Restore from IndexedDB</button>&nbsp;&nbsp;
+        <button onclick="emulator.clearState()">Clear IndexedDB</button>
+        <br />
+        <input type="text" id="fontsize" value="15" min="4" max="40" style="width: 25px">&nbsp;&nbsp;<button
+            onclick="updateFontSize()">Update font size</button>
+        <br />
+        memory (mb): <select name="memorysize" id="memorysize">
+            <option value="128">128</option>
+            <option value="196">196</option>
+            <option value="256">256</option>
+            <option value="384">384</option>
+            <option value="512">512</option>
+            <option value="1024">1024</option>
+        </select>
+        <!-- <input type="text" id="memorysize" value="96" min="96" max="8192" style="width: 35px">-->&nbsp;&nbsp;<button
+            onclick="updateMemorySize()">Reset</button>
+        &nbsp;&nbsp;<input type="checkbox" id="fullboot" name="fullboot" value="true"> Full Boot
+        <br />
+        <button style="display:inline;width:160px; height:20px;"
+            onclick="document.getElementById('upload_files').click()">
+            Send files to emulator
+        </button>
+        <input type='file' id="upload_files" style="display:none" multiple>
 
         &nbsp;&nbsp;
-        <!-- <input id="save_restore" type="button" value="Save state"> -->
-        <input id="save_file" type="button" value="Save state to file">
-        Restore from file: <input id="restore_file" type="file">
+
+        <button style="display:inline;width:110px; height:20px;" id="read_file">
+            Download file
+        </button>
+        <input type="text" id="read_file_name" value="" placeholder="enter path to file">
+
+        <!-- <textarea id="textarea" cols="55" rows="10" style="width: 100%"></textarea><br>
+        <button onclick="sendText()">Send Text</button> -->
     </div>
-    <hr />
-    <div id="terminal" style="filter: blur(3px);"></div>
 </body>
