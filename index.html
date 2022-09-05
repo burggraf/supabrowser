@@ -14,6 +14,7 @@
         let config = {
             font_size: 15,
             memory_size: 128,
+            save_filename: "state.bin"
             // vga_memory_size: 2,
         }
         const storage = idbStorage.createIDBStorage({
@@ -34,7 +35,7 @@
             let memorysizeElement = document.getElementById("memorysize");
             memorysizeElement.value = config.memory_size;
             document.getElementById("fontsize").value = config.font_size;
-
+            document.getElementById("save_filename").value = config.save_filename || "state.bin";
             const baseOptions = {
                 wasm_path: "./js/no-jit/v86.wasm",
                 memory_size: config.memory_size * 1024 * 1024,
@@ -107,11 +108,6 @@
                     console.log('handleBoot =>', line);
                     if (line.startsWith("server started")) {
                         emulator.remove_listener(handleBoot);
-                        // setTimeout(() => {
-                        // emulator.serial0_send('\\!/etc/init.d/S40network restart\n');
-                        // emulator.serial0_send('psql -U postgres\n');
-                        // emulator.serial0_send('\\! echo "boot_completed"; reset\n');
-                        // }, 0);
                         setTimeout(() => {
                             emulator.serial0_send('\\!/etc/init.d/S40network restart\n');
                             emulator.serial0_send('psql -U postgres\n');
@@ -124,13 +120,6 @@
                             }, 2000);
 
                         }, 1000);
-
-
-                        // setTimeout(() => {
-                        //     document.getElementById("terminal").style = 'filter: none;';
-                        //     document.getElementById("screen_container").style = 'display: none;';
-                        //     emulator.serial_adapter.term.focus();
-                        // }, 300);
                     }
                 }
                 emulator.add_listener("serial0-output-line", handleBoot);
@@ -192,14 +181,18 @@
             // };
 
             document.getElementById("save_file").onclick = async function () {
+                config.save_filename = document.getElementById("save_filename").value || "state.bin";
+                console.log('config.save_filename', config.save_filename);
                 const new_state = await emulator.save_state();
                 var a = document.createElement("a");
-                a.download = "v86state.bin";
+                a.download = config.save_filename; //"v86state.bin";
                 a.href = window.URL.createObjectURL(new Blob([new_state]));
                 a.dataset.downloadurl = "application/octet-stream:" + a.download + ":" + a.href;
                 a.click();
 
                 this.blur();
+                localStorage.setItem('config', JSON.stringify(config));
+
             };
 
             document.getElementById("restore_file").onchange = function () {
@@ -305,7 +298,10 @@
     <hr />
     <div style="clear: both;">
         <!-- <input id="save_restore" type="button" value="Save state"> -->
-        <input id="save_file" type="button" value="Save state to file">&nbsp;&nbsp;
+        <input id="save_file" type="button" value="Save state to file:">
+        <input type="text" id="save_filename" value="" placeholder="enter filename">
+        &nbsp;&nbsp;
+
         <button style="display:inline;width:160px; height:20px;"
             onclick="document.getElementById('restore_file').click()">
             Restore state from file
