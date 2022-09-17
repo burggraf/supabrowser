@@ -7,7 +7,7 @@
     <title>PostgreSQL in the Browser</title>
     <link rel="stylesheet" href="https://unpkg.com/xterm@4.19.0/css/xterm.css" />
     <script src="https://unpkg.com/xterm@4.19.0/lib/xterm.js"></script>
-    <script src="./js/no-jit/libv86.js"></script>
+    <script src="./js/libv86.js"></script>
     <script src="./js/idb-storage.min.js"></script>
     <script>
         var emulator;
@@ -37,7 +37,7 @@
             document.getElementById("fontsize").value = config.font_size;
             document.getElementById("save_filename").value = config.save_filename || "state.bin";
             const baseOptions = {
-                wasm_path: "./js/no-jit/v86.wasm",
+                wasm_path: "./js/v86.wasm",
                 memory_size: config.memory_size * 1024 * 1024,
                 filesystem: {
                     basefs: "filesystem/filesystem.json",
@@ -45,7 +45,10 @@
                 },
                 screen_container: document.getElementById("screen_container"),
                 serial_container_xtermjs: document.getElementById("terminal"),
-                network_relay_url: "wss://relay.widgetry.org/", // For non localhost: wss://relay.widgetry.org/
+                // network_relay_url: "wss://relay.widgetry.org/", // For non localhost: wss://relay.widgetry.org/
+                network_relay_url: "ws://proxy.azabab.com/",
+                preserve_mac_from_state_image: false,
+                mac_address_translation: false,
                 autostart: true,
                 disable_keyboard: true,
                 disable_mouse: true,
@@ -65,11 +68,15 @@
                 ...baseOptions,
                 ...(boot ? {
                     bzimage: {
-                        url: "./filesystem/26e85992.bin"
+                        url: "./filesystem/08679b15.bin"
                     },
                     cmdline: [
                         "rw",
-                        "root=host9p rootfstype=9p rootflags=version=9p2000.L,trans=virtio,cache=loose quiet acpi=off console=ttyS0 tsc=reliable mitigations=off random.trust_cpu=on nowatchdog page_poison=on",
+                        "root=host9p rootfstype=9p",
+                        "rootflags=version=9p2000.L,trans=virtio,cache=loose",
+                        "quiet acpi=off console=ttyS0",
+                        "tsc=reliable mitigations=off random.trust_cpu=on",
+                        "nowatchdog page_poison=on",
                     ].join(" "),
                     bios: {
                         url: "./system/seabios.bin",
@@ -86,21 +93,7 @@
 
             emulator = new V86Starter(options);
 
-            if (!boot) {
-                emulator.add_listener("emulator-ready", function () {
-                    console.log("emulator ready!");
-                    updateFontSize();
-
-                    setTimeout(() => {
-                        emulator.serial0_send('\\!/etc/init.d/S40network restart\n');
-                        emulator.serial0_send('psql -U postgres\n');
-                        emulator.serial0_send('\\! echo "boot_completed"; reset\n');
-                    }, 0);
-                    setTimeout(() => {
-                        document.getElementById("terminal").style = 'filter: none;';
-                    }, 2000);
-                });
-            } else {
+            if (boot) {
                 // let the user watch the boot process
                 document.getElementById("terminal").style = 'filter: none;';
 
@@ -123,6 +116,20 @@
                     }
                 }
                 emulator.add_listener("serial0-output-line", handleBoot);
+            } else {
+                emulator.add_listener("emulator-ready", function () {
+                    console.log("emulator ready!");
+                    updateFontSize();
+
+                    setTimeout(() => {
+                        emulator.serial0_send('\\!/etc/init.d/S40network restart\n');
+                        emulator.serial0_send('psql -U postgres\n');
+                        emulator.serial0_send('\\! echo "boot_completed"; reset\n');
+                    }, 0);
+                    setTimeout(() => {
+                        document.getElementById("terminal").style = 'filter: none;';
+                    }, 2000);
+                });
             }
             emulator.clearState = async function () {
                 await storage.delete('state-' + config.memory_size);
@@ -216,6 +223,7 @@
 
 
             document.getElementById("upload_files").onchange = function (e) {
+                console.log('upload_files', e.target.files);
                 async function getAsByteArray(file) {
                     return new Uint8Array(await readFile(file))
                 }
@@ -237,11 +245,12 @@
                     reader.onload = function (file) {
                         return async function (e) {
                             const byteFile = await getAsByteArray(file);
-                            emulator.create_file("/mnt/" + file.name, byteFile);
+                            emulator.create_file("/INBOX/" + file.name, byteFile);
                             console.log("uploaded " + file.name);
                         }
                     }(files[i]);
-                    reader.readAsText(files[i]);
+                    //reader.readAsText(files[i]);
+                    reader.readAsArrayBuffer(files[i]);
                 }
             }
 
@@ -303,6 +312,35 @@
                 console.log('updateMemorySize error', e);
             }
         }
+        
+        function sendText() {
+
+            emulator.add_listener("serial1-output-char", function(char)
+            {
+                console.log("outchar1", char);
+            });
+
+            const text = document.getElementById("textarea").value;
+            // emulator.serial0_send(text);
+            // net0-send
+            console.log('emulator', emulator);
+            console.log('emulator.bus', emulator.bus);
+            //console.log('emulator.network_adapter', emulator.network_adapter.bus);
+            console.log('sending text', text);
+            // console.log('emulator.keyboard_send_text', emulator.keyboard_send_text);
+            // emulator.keyboard_send_text(text);
+            let arr = [];
+            for (let x = 0; x < text.length; x++) {
+                arr.push(text.charCodeAt(x));
+            }
+            emulator.bus.listeners.net0-send(arr);
+
+            // emulator.serial_send_bytes("1",arr);
+            // emulator.bus.send("serial1-input", arr);
+
+            // console.log("hello,world".charCodeAt(0))
+            // document.getElementById("textarea").value = "";
+        }
     </script>
 </head>
 
@@ -359,8 +397,8 @@
             Download file
         </button>
         <input type="text" id="read_file_name" value="" placeholder="enter path to file">
-
-        <!-- <textarea id="textarea" cols="55" rows="10" style="width: 100%"></textarea><br>
-        <button onclick="sendText()">Send Text</button> -->
+        <br /><hr />
+        <textarea id="textarea" cols="55" rows="10" style="width: 100%"></textarea><br>
+        <button onclick="sendText()">Send Text</button>
     </div>
 </body>
