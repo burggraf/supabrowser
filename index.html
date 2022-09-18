@@ -167,6 +167,17 @@
                     console.log('restore error', err);
                 });
             }
+            emulator.add_listener("download-progress", function (e) {
+                const el = document.getElementById("progress");
+                if (e.loaded >= e.total || !e.total) {
+                    el.innerHTML = "";
+                } else {
+                    const percent = (e.loaded / Math.max(e.total, 1)) * 100;
+                    el.innerHTML = "<h3>Loading: " + e.file_name.replace("../images/", "") + " " + percent
+                        .toFixed(2) + "%</h3>" + `e.loaded ${e.loaded} e.total ${e.total}`;
+                }
+            });
+
 
             var state;
 
@@ -345,7 +356,6 @@
 </head>
 
 <body>
-
     <div id="screen_container" style="display:none">
         <div></div>
         <canvas></canvas>
@@ -398,5 +408,6 @@
         </button>
         <input type="text" id="read_file_name" value="" placeholder="enter path to file">
         <br /><hr />
+        <div id="progress"></div>
     </div>
 </body>
