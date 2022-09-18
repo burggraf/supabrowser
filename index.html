@@ -174,7 +174,7 @@
                 } else {
                     const percent = (e.loaded / Math.max(e.total, 1)) * 100;
                     el.innerHTML = "<h3>Loading: " + e.file_name.replace("../images/", "") + " " + percent
-                        .toFixed(2) + "%</h3>" + `e.loaded ${e.loaded} e.total ${e.total}`;
+                        .toFixed(2) + "%</h3>";
                 }
             });
 
