@@ -54,6 +54,9 @@
                 disable_mouse: true,
                 disable_speaker: true,
                 acpi: true,
+                // uart1: true,
+                //uart2: true,
+                //uart3: true,
             };
 
             const params = (new URL(document.location)).searchParams;
@@ -68,7 +71,7 @@
                 ...baseOptions,
                 ...(boot ? {
                     bzimage: {
-                        url: "./filesystem/08679b15.bin"
+                        url: "./filesystem/8536902a.bin"
                     },
                     cmdline: [
                         "rw",
@@ -256,7 +259,7 @@
                     reader.onload = function (file) {
                         return async function (e) {
                             const byteFile = await getAsByteArray(file);
-                            emulator.create_file("/INBOX/" + file.name, byteFile);
+                            emulator.create_file("/mnt/" + file.name, byteFile);
                             console.log("uploaded " + file.name);
                         }
                     }(files[i]);
@@ -326,31 +329,23 @@
         
         function sendText() {
 
-            emulator.add_listener("serial1-output-char", function(char)
-            {
-                console.log("outchar1", char);
-            });
+            const text = "this is a test";
+            emulator.serial0_send(text);
 
-            const text = document.getElementById("textarea").value;
-            // emulator.serial0_send(text);
-            // net0-send
-            console.log('emulator', emulator);
-            console.log('emulator.bus', emulator.bus);
-            //console.log('emulator.network_adapter', emulator.network_adapter.bus);
-            console.log('sending text', text);
-            // console.log('emulator.keyboard_send_text', emulator.keyboard_send_text);
-            // emulator.keyboard_send_text(text);
-            let arr = [];
-            for (let x = 0; x < text.length; x++) {
-                arr.push(text.charCodeAt(x));
-            }
-            emulator.bus.listeners.net0-send(arr);
-
-            // emulator.serial_send_bytes("1",arr);
-            // emulator.bus.send("serial1-input", arr);
-
-            // console.log("hello,world".charCodeAt(0))
-            // document.getElementById("textarea").value = "";
+        }
+        function send_script(name, text) {
+            const script =  new TextEncoder().encode(text);
+            emulator.create_file("/inbox/" + name + ".sh", script);
+        }
+        function restart_network() {
+            send_script('restart_network', '/etc/init.d/S40network restart &> /dev/null');
+        }
+        function get_new_ip() {
+            send_script('get_new_ip', `
+                echo 0000:00:05.0 > /sys/bus/pci/drivers/ne2k-pci/unbind &&
+                echo 0000:00:05.0 > /sys/bus/pci/drivers/ne2k-pci/bind &&
+                /etc/init.d/S40network restart
+            `);
         }
     </script>
 </head>
@@ -409,5 +404,20 @@
         <input type="text" id="read_file_name" value="" placeholder="enter path to file">
         <br /><hr />
         <div id="progress"></div>
+
+        <!-- <button style="display:inline;width:160px; height:20px;"
+        onclick="sendText()">
+        Send text to emulator
+        </button> -->
+        <button style="display:inline;width:160px; height:20px;"
+        onclick="restart_network()">
+        restart_network
+        </button><br>
+        <button style="display:inline;width:160px; height:20px;"
+        onclick="get_new_ip()">
+        get_new_ip
+        </button>
+
+
     </div>
 </body>
