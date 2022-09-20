@@ -277,7 +277,6 @@
 
         async function downloadFile(path) {
             const contents = await emulator.read_file(path);
-            console.log('downloadFile', path, contents);
             const filename = ('/' + path).split('/').pop();
             var a = document.createElement("a");
             a.download = filename;
