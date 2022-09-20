@@ -344,31 +344,77 @@
         }
 
         function restart_network() {
-            send_script('restart_network', '/etc/init.d/S40network restart &> /dev/null && ' +
-            "ifconfig eth0 | grep 'inet addr:' | sed 's/.* inet addr:\\(.*\\)  Bcast.*/\\1/' > /addr.txt && sync"
-            );
+            send_script('restart_network', '/etc/init.d/S40network restart &> /dev/null');
+            setTimeout(get_address, 2000);
         }
 
+        function stop_network() {
+            send_script('stop_network', '/etc/init.d/S40network stop &> /dev/null');
+            document.getElementById("IP").innerHTML = '';
+        }
+
+        let get_new_ip_counter = 0;
         function get_new_ip() {
             send_script('get_new_ip', `
                 echo 0000:00:05.0 > /sys/bus/pci/drivers/ne2k-pci/unbind &&
                 echo 0000:00:05.0 > /sys/bus/pci/drivers/ne2k-pci/bind &&
-                /etc/init.d/S40network restart && ` +
-                "ifconfig eth0 | grep 'inet addr:' | sed 's/.* inet addr:\\(.*\\)  Bcast.*/\\1/' > /addr.txt && sync"
+                sleep 1 &&
+                /etc/init.d/S40network restart`
+                // /etc/init.d/S40network restart && ` +
+                // "ifconfig eth0 | grep 'inet addr:' | sed 's/.* inet addr:\\(.*\\)  Bcast.*/\\1/' > /addr.txt && sync"
             );
+            setTimeout(get_address, 2000);
         }
+
+        let get_address_counter = 0;
         async function get_address() {
-            let result = 'offline';
+            const progress_el = document.getElementById("progress");
+            progress_el.innerHTML = 'Getting IP address...';
+            let result = '';
             try {
                 const contents = await emulator.read_file("/addr.txt");
-                result = new TextDecoder().decode(contents);
+                result = new TextDecoder().decode(contents).replace(/\n/g, '');
             } catch (err) {
                 console.log('error', err);
+                document.getElementById("IP").innerHTML = '';
+                if (err && err.message && err.message === "File not found") {
+                    progress_el.innerHTML = 'Getting IP address...ready';
+                    // get_new_ip();
+                    // get_address_counter = 0;
+                    // setTimeout(get_address, 2000);
+                    // result = "restarting";
+                    // return;
+                }
             } finally {
-                if (result) {
-                    console.log('result', result);
+                if (result && result.length > 0) {
+                    
+                    const arr = result.split('.');
+                    // pad arr[3] with leading zeros
+                    arr[3] = arr[3].padStart(3, '0');
+                    document.getElementById("IP").innerHTML = result + 
+                    ` psql postgres://postgres@proxy.azabab.com:${arr[2]}${arr[3]}`;
+
+                    console.log('got address', result);
+                    get_address_counter = 0;
+                    progress_el.innerHTML = '';
+                    // console.log('result =' + result + '=');
+                    // console.log('a get_address_counter', get_address_counter);
                 } else {
-                    console.log('no result');
+                    // console.log('no result');
+                    document.getElementById("IP").innerHTML = '';
+                    progress_el.innerHTML = 'Getting IP address...' + get_address_counter;
+                    // console.log('b get_address_counter', get_address_counter);
+                    if (get_address_counter < 10) {
+                        get_address_counter++;
+                        setTimeout(get_address, 1000);
+                    } else {
+                        // console.log('get_address timed out');
+                        get_address_counter = 0;
+                        progress_el.innerHTML = 'Getting IP address...FAILED';                        
+                        setTimeout(() => {
+                            progress_el.innerHTML = '';                        
+                        }, 2000);
+                    }
                 }
             }
         }
@@ -435,14 +481,18 @@
         onclick="sendText()">
         Send text to emulator
         </button> -->
-        <button style="display:inline;width:160px; height:20px;" onclick="restart_network()">
-            restart_network
-        </button><br>
-        <button style="display:inline;width:160px; height:20px;" onclick="get_new_ip()">
-            get_new_ip
-        </button><br>
-        <button style="display:inline;width:160px; height:20px;" onclick="get_address()">
-            get_address
+        <div>IP: <span id="IP"></span></div>
+        <button style="display:inline;width:125px; height:20px;" onclick="restart_network()">
+            restart network
+        </button>&nbsp;&nbsp;
+        <button style="display:inline;width:125px; height:20px;" onclick="stop_network()">
+            stop network
+        </button>&nbsp;&nbsp;
+        <button style="display:inline;width:125px; height:20px;" onclick="get_new_ip()">
+            get new ip
+        </button>&nbsp;&nbsp;
+        <button style="display:inline;width:125px; height:20px;" onclick="get_address()">
+            get address
         </button>
 
 
