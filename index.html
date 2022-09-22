@@ -287,6 +287,7 @@
             a.click();
             a.remove();
         }
+
         function updateFontSize() {
             console.log('FONT SIZE WAS', emulator.serial_adapter.term.options.fontSize);
             //emulator.screen_adapter.set_size_text(document.getElementById("font_size").value, document.getElementById("font_size").value);
@@ -353,6 +354,7 @@
         }
 
         let get_new_ip_counter = 0;
+
         function get_new_ip() {
             send_script('get_new_ip', `
                 echo 0000:00:05.0 > /sys/bus/pci/drivers/ne2k-pci/unbind &&
@@ -386,12 +388,12 @@
                 }
             } finally {
                 if (result && result.length > 0) {
-                    
+
                     const arr = result.split('.');
                     // pad arr[3] with leading zeros
                     arr[3] = arr[3].padStart(3, '0');
-                    document.getElementById("IP").innerHTML = result + 
-                    ` psql postgres://postgres@proxy.azabab.com:${arr[2]}${arr[3]}`;
+                    document.getElementById("IP").innerHTML = result +
+                        ` psql postgres://postgres@proxy.azabab.com:${arr[2]}${arr[3]}`;
 
                     console.log('got address', result);
                     get_address_counter = 0;
@@ -409,88 +411,508 @@
                     } else {
                         // console.log('get_address timed out');
                         get_address_counter = 0;
-                        progress_el.innerHTML = 'Getting IP address...FAILED';                        
+                        progress_el.innerHTML = 'Getting IP address...FAILED';
                         setTimeout(() => {
-                            progress_el.innerHTML = '';                        
+                            progress_el.innerHTML = '';
                         }, 2000);
                     }
                 }
             }
         }
+
+        /* Set the width of the side navigation to 250px */
+        function openNav() {
+            //document.getElementById("terminal").style.display = "none"; 
+            document.getElementById("main").style.marginLeft = "250px";
+            document.getElementById("mySidenav").style.width = "250px";
+        }
+
+        /* Set the width of the side navigation to 0 */
+        function closeNav() {
+            //document.getElementById("terminal").style.display = "block"; 
+            document.getElementById("main").style.marginLeft = "0px";
+            document.getElementById("mySidenav").style.width = "0";
+        }
     </script>
 </head>
 
 <body>
-    <div id="screen_container" style="display:none">
-        <div></div>
-        <canvas></canvas>
-        <hr />
+
+    <div id="header" class="header">
+        <div class="menubutton" onclick="openNav()">
+            <img src="img/menu-30.png" />
+        </div>
     </div>
-    <div id="terminal" style="filter: blur(3px);"></div>
-    <hr />
-    <div style="clear: both;">
-        <!-- <input id="save_restore" type="button" value="Save state"> -->
-        <input id="save_file" type="button" value="Save state to file:">
-        <input type="text" id="save_filename" value="" placeholder="enter filename">
-        &nbsp;&nbsp;
 
-        <button style="display:inline;width:160px; height:20px;"
-            onclick="document.getElementById('restore_file').click()">
-            Restore state from file
-        </button>
-        <input type='file' id="restore_file" style="display:none">
+    <!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
+    <div id="main">
 
-        <br />
-        <button onclick="emulator.save()">Save to IndexedDB</button>&nbsp;&nbsp;
-        <button onclick="emulator.restore()">Restore from IndexedDB</button>&nbsp;&nbsp;
-        <button onclick="emulator.clearState()">Clear IndexedDB</button>
-        <br />
-        <input type="text" id="fontsize" value="15" min="4" max="40" style="width: 25px">&nbsp;&nbsp;<button
-            onclick="updateFontSize()">Update font size</button>
-        <br />
-        memory (mb): <select name="memorysize" id="memorysize">
-            <option value="128">128</option>
-            <option value="196">196</option>
-            <option value="256">256</option>
-            <option value="384">384</option>
-            <option value="512">512</option>
-            <option value="1024">1024</option>
-        </select>
-        <!-- <input type="text" id="memorysize" value="96" min="96" max="8192" style="width: 35px">-->&nbsp;&nbsp;<button
-            onclick="updateMemorySize()">Reset</button>
-        &nbsp;&nbsp;<input type="checkbox" id="fullboot" name="fullboot" value="true"> Full Boot
-        <br />
-        <button style="display:inline;width:160px; height:20px;"
-            onclick="document.getElementById('upload_files').click()">
-            Send files to emulator
-        </button>
-        <input type='file' id="upload_files" style="display:none" multiple>
-
-        &nbsp;&nbsp;
-
-        <button style="display:inline;width:110px; height:20px;" id="read_file">
-            Download file
-        </button>
-        <input type="text" id="read_file_name" value="" placeholder="enter path to file">
-        <br />
+        <div id="screen_container" style="display:none">
+            <div></div>
+            <canvas></canvas>
+            <hr />
+        </div>
+        <div id="terminal" style="filter: blur(3px);"></div>
         <hr />
-        <div id="progress"></div>
+        <div style="clear: both;">
+            <!-- <input id="save_restore" type="button" value="Save state"> -->
+            <input id="save_file" type="button" value="Save state to file:">
+            <input type="text" id="save_filename1" value="" placeholder="enter filename">
+            &nbsp;&nbsp;
 
-        <!-- <button style="display:inline;width:160px; height:20px;"
+            <button style="display:inline;width:160px; height:20px;"
+                onclick="document.getElementById('restore_file').click()">
+                Restore state from file
+            </button>
+            <input type='file' id="restore_file" style="display:none">
+
+            <br />
+            <button onclick="emulator.save()">Save to IndexedDB</button>&nbsp;&nbsp;
+            <button onclick="emulator.restore()">Restore from IndexedDB</button>&nbsp;&nbsp;
+            <button onclick="emulator.clearState()">Clear IndexedDB</button>
+            <br />
+            <input type="text" id="fontsize" value="15" min="4" max="40" style="width: 25px">&nbsp;&nbsp;<button
+                onclick="updateFontSize()">Update font size</button>
+            <br />
+            memory (mb): <select name="memorysize" id="memorysize">
+                <option value="128">128</option>
+                <option value="196">196</option>
+                <option value="256">256</option>
+                <option value="384">384</option>
+                <option value="512">512</option>
+                <option value="1024">1024</option>
+            </select>
+            <!-- <input type="text" id="memorysize" value="96" min="96" max="8192" style="width: 35px">-->&nbsp;&nbsp;<button
+                onclick="updateMemorySize()">Reset</button>
+            &nbsp;&nbsp;<input type="checkbox" id="fullboot" name="fullboot" value="true"> Full Boot
+            <br />
+            <button style="display:inline;width:160px; height:20px;"
+                onclick="document.getElementById('upload_files').click()">
+                Send files to emulator
+            </button>
+            <input type='file' id="upload_files" style="display:none" multiple>
+
+            &nbsp;&nbsp;
+
+            <button style="display:inline;width:110px; height:20px;" id="read_file">
+                Download file
+            </button>
+            <input type="text" id="read_file_name" value="" placeholder="enter path to file">
+            <br />
+            <hr />
+            <div id="progress"></div>
+
+            <!-- <button style="display:inline;width:160px; height:20px;"
         onclick="sendText()">
         Send text to emulator
         </button> -->
-        <div>IP: <span style="font-family: monospace;font-weight: bold;" id="IP">offline</span></div>
-        <button style="display:inline;width:125px; height:20px;" onclick="get_new_ip()">
-            restart network
-        </button>&nbsp;&nbsp;
-        <!-- <button style="display:inline;width:125px; height:20px;" onclick="get_address()">
+            <div>IP: <span style="font-family: monospace;font-weight: bold;" id="IP">offline</span></div>
+            <button style="display:inline;width:125px; height:20px;" onclick="get_new_ip()">
+                restart network
+            </button>&nbsp;&nbsp;
+            <!-- <button style="display:inline;width:125px; height:20px;" onclick="get_address()">
             get address
         </button>&nbsp;&nbsp; -->
-        <button style="display:inline;width:125px; height:20px;" onclick="stop_network()">
-            stop network
-        </button>
+            <button style="display:inline;width:125px; height:20px;" onclick="stop_network()">
+                stop network
+            </button>
 
 
+        </div>
+
+        <div style="clear: both; max-width: 600px;">
+
+            <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;">
+                <tr>
+                    <td colspan="2" style="text-align: left;">
+                        <button class="button-37" role="button">Save to File</button>
+                        &nbsp;
+                        <input type="text" id="save_filename" class="input-box" value="" placeholder="enter filename">
+                    </td>
+                    <!-- horizontal align right -->
+
+
+                    <td style="text-align: right;">
+                        <button class="button-37" role="button">Restore from File</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">
+                        <button class="button-38" role="button">Save</button>
+                    </td>
+                    <td style="text-align: center;">
+                        <button class="button-38" role="button">Clear</button>
+                    </td>
+                    <td style="text-align: right;">
+                        <button class="button-38" role="button">Restore</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;" colspan="3">
+                        <select name="xmemorysize" id="xmemorysize" class="selectobject">
+                            <option value="128">128mb</option>
+                            <option value="196">196mb</option>
+                            <option value="256">256mb</option>
+                            <option value="384">384mb</option>
+                            <option value="512">512mb</option>
+                            <option value="1024">1024mb</option>
+                        </select><br/>
+                        <select name="xfullboot" id="xfullboot" class="selectobject">
+                            <option value="true">Full Boot</option>
+                            <option value="false" selected>Quick Boot</option>
+                        </select><br/>
+                        <button class="button-38" role="button">Reset</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">
+                        <button class="button-37" role="button">Start Network</button>
+                    </td>
+                    <td style="text-align: center;">
+                        <button class="button-38" role="button">Stop Network</button>
+                    </td>
+                    <td style="text-align: right;">
+                        &nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3"><span class="rowheader">Upload files to emulator / download file from
+                            emulator</span>></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">
+                        <button class="button-37" role="button">Upload</button>
+                    </td>
+                    <td style="text-align: center;">
+                        <button class="button-38" role="button">Download</button>
+                    </td>
+                    <td style="text-align: right;">
+                        &nbsp;
+                    </td>
+                </tr>
+
+            </table>
+
+        </div>
     </div>
+
+
+    <div id="mySidenav" class="sidenav">
+        <div style="height: 40px; background-color: lightgray;">
+            <span class="closebtn" onclick="closeNav()">&times;</span>
+        </div>
+        <div class="menucontent">
+            <a href="#">Save State to File</a>
+
+            <button class="button-37" role="button">Save</button><br/>
+            <input type="text" id="save_filename" class="input-box spacebelow" value="" placeholder="enter filename"><br/>
+            <button class="button-37" role="button">Restore</button>
+
+            <a href="#">Save State to IndexedDB</a>
+
+            <button class="button-38 spacebelow" role="button">Save</button>
+            <button class="button-38 spacebelow" role="button">Clear</button>
+            <button class="button-38" role="button">Restore</button>
+
+            
+            <a href="#">Network</a>
+
+
+            <button class="button-37 spacebelow" role="button">Start Network</button>
+            <button class="button-38 spacebelow" role="button">Stop Network</button>
+
+            <a href="#">Transfer Files</a>
+
+            <button class="button-37 spacebelow" role="button">Upload Files</button>
+            <button class="button-38" role="button">Download File</button>
+            <input type="text" id="read_file_name" class="input-box" value="" placeholder="enter path to file">
+
+            <a href="#">Reset</a>
+
+            <select name="xmemorysize" id="xmemorysize" class="selectobject spacebelow">
+                <option value="128">128mb</option>
+                <option value="196">196mb</option>
+                <option value="256">256mb</option>
+                <option value="384">384mb</option>
+                <option value="512">512mb</option>
+                <option value="1024">1024mb</option>
+            </select>
+            <select name="xfullboot" id="xfullboot" class="selectobject spacebelow">
+                <option value="true">Full Boot</option>
+                <option value="false" selected>Quick Boot</option>
+            </select>
+            <button class="button-38" role="button">Reset</button>
+
+            <a href="#">Font Size</a>
+
+            <select style="width: 40%;" name="xfontsize" id="xfontsize" class="selectobject spacebelow">
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+                <option value="14">16</option>
+                <option value="14">18</option>
+                <option value="14">20</option>
+                <option value="14">22</option>
+                <option value="14">24</option>
+                <option value="14">26</option>
+                <option value="14">28</option>
+                <option value="14">30</option>
+            </select>
+            <button style="width: 58%;" class="button-38" role="button">Set Font</button>
+            <br/><br/>
+            <button class="button-38" role="button">About this App</button>
+            <br/>
+            <br/>
+            <br/>
+            <br/>
+
+        </div>
+    </div>
+
+    <!-- Use any element to open the sidenav -->
+    <span onclick="openNav()">open</span>
+
+
+
+
+    <style>
+        /* The side navigation menu */
+        .header {
+            padding: 0px;
+            margin: -8px;
+            height: 40px;
+            background-color: lightgray;
+            border: 1px solid darkgray;
+            vertical-align: middle;
+        }
+        .menubutton {
+            height: 100%;
+            width: 50px;
+            padding-top: 5px;
+            padding-left: 10px;
+            margin: 0px;
+        }
+        .spacebelow {
+            margin-bottom: 5px;
+        }
+
+        .sidenav {
+            height: 100%;
+            /* 100% Full-height */
+            width: 0;
+            /* 0 width - change this with JavaScript */
+            position: fixed;
+            /* Stay in place */
+            z-index: 1;
+            /* Stay on top */
+            top: 0;
+            /* Stay at the top */
+            left: 0;
+            background-color: #111;
+            /* Black*/
+            overflow-x: hidden;
+            /* Disable horizontal scroll */
+            /* padding-top: 60px; */
+            /* Place content 60px from the top */
+            transition: 0.5s;
+            /* 0.5 second transition effect to slide in the sidenav */
+        }
+
+        /* The navigation menu links */
+        .sidenav a {
+            /* padding: 8px 8px 8px 32px; */
+            text-decoration: none;
+            font-family: "Akzidenz Grotesk BQ Medium", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            color: #A1A1A1;/*#818181;*/
+            display: block;
+            transition: 0.3s;
+            margin-bottom: 5px;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        /* When you mouse over the navigation links, change their color */
+        .sidenav a:hover {
+            color: #f1f1f1;
+        }
+
+        /* Position and style the close button (top right corner) */
+        .sidenav .closebtn {
+            position: absolute;
+            top: 0;
+            left: 0;
+            /* color: #818181; */
+            color: #444444;
+            /* right: 25px; */
+            font-size: 50px;
+            /* font-weight: bold; */
+            margin-left: 15px;
+            margin-top: -10px;
+            /* background-color: pink; */
+        }
+
+        /* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+        #main {
+            transition: margin-left .5s;
+            padding-top: 15px;
+            /* padding: 20px; */
+        }
+
+        /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+        @media screen and (max-height: 450px) {
+            .sidenav {
+                padding-top: 15px;
+            }
+
+            .sidenav a {
+                font-size: 18px;
+            }
+        }
+
+        /* CSS */
+        .menucontent {
+            margin-top: 10px;
+            margin-left: 10px;
+            margin-right: 10px;
+
+        }
+        .button-37 {
+            background-color: #13aa52;
+            border: 1px solid #13aa52;
+            border-radius: 4px;
+            box-shadow: rgba(0, 0, 0, .1) 0 2px 4px 0;
+            box-sizing: border-box;
+            color: #fff;
+            cursor: pointer;
+            font-family: "Akzidenz Grotesk BQ Medium", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            outline: none;
+            outline: 0;
+            padding: 10px 25px;
+            text-align: center;
+            transform: translateY(0);
+            transition: transform 150ms, box-shadow 150ms;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            width: 100%;
+        }
+
+        .button-37:hover {
+            box-shadow: rgba(0, 0, 0, .15) 0 3px 9px 0;
+            transform: translateY(-2px);
+        }
+
+
+        .button-38 {
+            background-color: #1339aa;
+            border: 1px solid #1339aa;
+            border-radius: 4px;
+            box-shadow: rgba(0, 0, 0, .1) 0 2px 4px 0;
+            box-sizing: border-box;
+            color: #fff;
+            cursor: pointer;
+            font-family: "Akzidenz Grotesk BQ Medium", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            outline: none;
+            outline: 0;
+            padding: 10px 25px;
+            text-align: center;
+            transform: translateY(0);
+            transition: transform 150ms, box-shadow 150ms;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            width: 100%;
+        }
+
+        .button-38:hover {
+            box-shadow: rgba(0, 0, 0, .15) 0 3px 9px 0;
+            transform: translateY(-2px);
+        }
+
+
+        @media (min-width: 768px) {
+            .button-37 {
+                padding: 10px 30px;
+            }
+
+            .button-38 {
+                padding: 10px 30px;
+            }
+        }
+
+        .input-box {
+            box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+            font-family: "Akzidenz Grotesk BQ Medium", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            outline: none;
+            outline: 0;
+            padding: 10px 25px;
+            text-align: center;
+        }
+
+        .selectobject {
+            box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+            font-family: "Akzidenz Grotesk BQ Medium", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            outline: none;
+            outline: 0;
+            padding: 10px 25px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .checkboxobject {
+            box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+            font-family: "Akzidenz Grotesk BQ Medium", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            outline: none;
+            outline: 0;
+            padding: 10px 25px;
+            text-align: center;
+            width: 40px;
+            height: 40px;
+            vertical-align: bottom;
+        }
+
+        .textobject {
+            box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+            font-family: "Akzidenz Grotesk BQ Medium", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            outline: none;
+            outline: 0;
+            padding: 10px 25px;
+            text-align: left;
+        }
+
+        .rowheader {
+            box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+            font-family: "Akzidenz Grotesk BQ Medium", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            outline: none;
+            outline: 0;
+            padding: 10px 25px;
+            text-align: left;
+        }
+    </style>
+
+
 </body>
