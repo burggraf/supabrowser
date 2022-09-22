@@ -424,6 +424,7 @@
         function openNav() {
             //document.getElementById("terminal").style.display = "none"; 
             document.getElementById("main").style.marginLeft = "250px";
+            document.getElementById("topbar").style.paddingLeft = "210px";
             document.getElementById("mySidenav").style.width = "250px";
         }
 
@@ -431,6 +432,7 @@
         function closeNav() {
             //document.getElementById("terminal").style.display = "block"; 
             document.getElementById("main").style.marginLeft = "0px";
+            document.getElementById("topbar").style.paddingLeft = "20px";
             document.getElementById("mySidenav").style.width = "0";
         }
     </script>
@@ -440,8 +442,11 @@
 
     <div id="header" class="header">
         <div class="menubutton" onclick="openNav()">
-            <img src="img/menu-30.png" />
+            <img src="img/menu-30.png" style="height: 100%" />
         </div>
+
+        <span class="topbar" id="topbar">Postgres in the Browser</span>
+
     </div>
 
     <!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
@@ -685,6 +690,15 @@
 
 
     <style>
+        .topbar {       
+            display: inline-block;     
+            font-family: "Akzidenz Grotesk BQ Medium", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 22px;
+            vertical-align: top;
+            padding-left: 20px;
+            padding-top: 6px;
+            height: 100%;
+        }
         /* The side navigation menu */
         .header {
             padding: 0px;
@@ -695,11 +709,13 @@
             vertical-align: middle;
         }
         .menubutton {
+            display: inline;
             height: 100%;
             width: 50px;
             padding-top: 5px;
             padding-left: 10px;
-            margin: 0px;
+
+            /*margin: 0px;*/
         }
         .spacebelow {
             margin-bottom: 5px;
