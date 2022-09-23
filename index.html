@@ -429,7 +429,7 @@
 
     <div id="header" class="header">
         <div class="menubutton" onclick="openNav()">
-            <img src="img/menu-30.png" style="height: 100%" />
+            <img src="img/menu-30-white.png" style="height: 100%" />
         </div>
 
         <span class="topbar" id="topbar">Postgres in the Browser</span>
@@ -456,7 +456,7 @@
 
 
     <div id="mySidenav" class="sidenav">
-        <div style="height: 40px; background-color: lightgray;">
+        <div class="sidenavheader">
             <span class="closebtn" onclick="closeNav()">&times;</span>
         </div>
         <div class="menucontent">
@@ -544,19 +544,20 @@
         .topbar {       
             display: inline-block;     
             font-family: "Akzidenz Grotesk BQ Medium", -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 22px;
+            font-size: 20px;
             vertical-align: top;
             padding-left: 20px;
             padding-top: 6px;
             height: 100%;
+            color: white;
         }
         /* The side navigation menu */
         .header {
             padding: 0px;
             margin: -8px;
             height: 40px;
-            background-color: lightgray;
-            border: 1px solid darkgray;
+            background-color: #708090; /* Slate Gray */
+            border: 1px solid #708090;
             vertical-align: middle;
         }
         .menubutton {
@@ -571,7 +572,10 @@
         .spacebelow {
             margin-bottom: 5px;
         }
-
+        .sidenavheader {
+            height: 40px; 
+            background-color: #708090; /* Slate Gray */
+        }
         .sidenav {
             height: 100%;
             /* 100% Full-height */
@@ -619,7 +623,8 @@
             top: 0;
             left: 0;
             /* color: #818181; */
-            color: #444444;
+            /* color: #444444; */
+            color: white;
             /* right: 25px; */
             font-size: 50px;
             /* font-weight: bold; */
