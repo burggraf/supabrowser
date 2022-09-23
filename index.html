@@ -360,8 +360,8 @@
                     const arr = result.split('.');
                     // pad arr[3] with leading zeros
                     arr[3] = arr[3].padStart(3, '0');
-                    document.getElementById("IP").innerHTML = result +
-                        ` psql postgres://postgres@proxy.azabab.com:${arr[2]}${arr[3]}`;
+                    document.getElementById("IP").innerHTML = 'IP: ' + result +
+                        `&nbsp;&nbsp;psql postgres://postgres@proxy.azabab.com:${arr[2]}${arr[3]}`;
 
                     console.log('got address', result);
                     get_address_counter = 0;
@@ -393,6 +393,7 @@
             //document.getElementById("terminal").style.display = "none"; 
             document.getElementById("main").style.marginLeft = "250px";
             document.getElementById("topbar").style.paddingLeft = "210px";
+            document.getElementById("statusbar").style.paddingLeft = "250px";
             document.getElementById("mySidenav").style.width = "250px";
         }
 
@@ -401,6 +402,7 @@
             //document.getElementById("terminal").style.display = "block"; 
             document.getElementById("main").style.marginLeft = "0px";
             document.getElementById("topbar").style.paddingLeft = "20px";
+            document.getElementById("statusbar").style.paddingLeft = "0px";
             document.getElementById("mySidenav").style.width = "0";
         }
         async function save_file() {
@@ -443,71 +445,11 @@
             <hr />
         </div>
         <div id="terminal" style="filter: blur(3px);"></div>
-        <hr />
-        <div style="clear: both;">
-            <!-- <input id="save_restore" type="button" value="Save state"> -->
-            <input id="save_file" type="button" value="Save state to file:">
-            <input type="text" id="save_filename1" value="" placeholder="enter filename">
-            &nbsp;&nbsp;
-
-            <button style="display:inline;width:160px; height:20px;"
-                onclick="document.getElementById('restore_file').click()">
-                Restore state from file
-            </button>
-            <input type='file' id="xrestore_file" style="display:none">
-
-            <br />
-            <button onclick="emulator.save()">Save to IndexedDB</button>&nbsp;&nbsp;
-            <button onclick="emulator.restore()">Restore from IndexedDB</button>&nbsp;&nbsp;
-            <button onclick="emulator.clearState()">Clear IndexedDB</button>
-            <br />
-            <input type="text" id="xfontsize" value="15" min="4" max="40" style="width: 25px">&nbsp;&nbsp;<button
-                onclick="updateFontSize()">Update font size</button>
-            <br />
-            memory (mb): <select name="xxxmemorysize" id="xxxmemorysize">
-                <option value="128">128</option>
-                <option value="196">196</option>
-                <option value="256">256</option>
-                <option value="384">384</option>
-                <option value="512">512</option>
-                <option value="1024">1024</option>
-            </select>
-            <!-- <input type="text" id="memorysize" value="96" min="96" max="8192" style="width: 35px">-->&nbsp;&nbsp;<button
-                onclick="updateMemorySize()">Reset</button>
-            &nbsp;&nbsp;<input type="checkbox" id="xxfullboot" name="xxfullboot" value="true"> Full Boot
-            <br />
-            <button style="display:inline;width:160px; height:20px;"
-                onclick="document.getElementById('upload_files').click()">
-                Send files to emulator
-            </button>
-            <input type='file' id="xupload_files" style="display:none" multiple>
-
-            &nbsp;&nbsp;
-
-            <button style="display:inline;width:110px; height:20px;" id="xread_file">
-                Download file
-            </button>
-            <input type="text" id="xread_file_name" value="" placeholder="enter path to file">
-            <br />
-            <hr />
-            <div id="progress"></div>
-
-            <!-- <button style="display:inline;width:160px; height:20px;"
-        onclick="sendText()">
-        Send text to emulator
-        </button> -->
-            <div>IP: <span style="font-family: monospace;font-weight: bold;" id="IP">offline</span></div>
-            <button style="display:inline;width:125px; height:20px;" onclick="get_new_ip()">
-                restart network
-            </button>&nbsp;&nbsp;
-            <!-- <button style="display:inline;width:125px; height:20px;" onclick="get_address()">
-            get address
-        </button>&nbsp;&nbsp; -->
-            <button style="display:inline;width:125px; height:20px;" onclick="stop_network()">
-                stop network
-            </button>
-
-
+        </div>
+        
+        <div id="statusbar">
+            <div class="progress" id="progress"></div>
+            <div class="IP" id="IP"></div>
         </div>
 
     </div>
@@ -588,13 +530,15 @@
         </div>
     </div>
 
-    <!-- Use any element to open the sidenav -->
-    <span onclick="openNav()">open</span>
-
-
-
-
     <style>
+        .progress {
+            font-family: "Akzidenz Grotesk BQ Medium", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 22px;
+        }
+        .IP {
+            font-family: "Akzidenz Grotesk BQ Medium", -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 22px;
+        }
         .topbar {       
             display: inline-block;     
             font-family: "Akzidenz Grotesk BQ Medium", -apple-system, BlinkMacSystemFont, sans-serif;
